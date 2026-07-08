@@ -118,33 +118,50 @@ async function callSodeom(systemPrompt: string, messages: ChatMessage[]): Promis
 function detectIssueType(message: string): { agent: AgentName; confidence: number } {
   const msg = message.toLowerCase();
 
+  // Escalation first — highest priority
+  if (msg.includes("escalat") || msg.includes("manager") || msg.includes("supervisor") || msg.includes("complaint") || msg.includes("unacceptable"))
+    return { agent: "Escalation Agent", confidence: 0.95 };
+
+  // Policy questions (before return — "return policy" is a policy question)
+  if ((msg.includes("policy") || msg.includes("policies")) && !msg.includes("i want to return") && !msg.includes("please return"))
+    return { agent: "Policy Agent", confidence: 0.88 };
+
+  // Returns
   if (msg.includes("return") || msg.includes("refund") || msg.includes("money back"))
     return { agent: "Returns Agent", confidence: 0.95 };
-  if (msg.includes("defect") || msg.includes("broken") || msg.includes("replace") || msg.includes("not working"))
+
+  // Replacement
+  if (msg.includes("defect") || msg.includes("broken") || msg.includes("replace") || msg.includes("not working") || msg.includes("damage"))
     return { agent: "Replacement Agent", confidence: 0.9 };
-  if (msg.includes("warranty") || msg.includes("guarantee") || msg.includes("cover"))
+
+  // Warranty & shipping policy
+  if (msg.includes("warranty") || msg.includes("guarantee") || msg.includes("cover") || msg.includes("shipping") || msg.includes("delivery") || msg.includes("how long"))
     return { agent: "Policy Agent", confidence: 0.85 };
+
+  // Inventory
   if (msg.includes("stock") || msg.includes("available") || msg.includes("in stock") || msg.includes("inventory"))
     return { agent: "Inventory Agent", confidence: 0.85 };
-  if (msg.includes("spec") || msg.includes("feature") || msg.includes("compare") || msg.includes("difference") || msg.includes("which"))
+
+  // Catalog
+  if (msg.includes("spec") || msg.includes("feature") || msg.includes("compare") || msg.includes("difference") || msg.includes("which") || msg.includes("better"))
     return { agent: "Catalog Agent", confidence: 0.8 };
-  if (msg.includes("policy") || msg.includes("shipping") || msg.includes("delivery") || msg.includes("how long"))
-    return { agent: "Policy Agent", confidence: 0.8 };
-  if (msg.includes("escalat") || msg.includes("manager") || msg.includes("supervisor") || msg.includes("complaint"))
-    return { agent: "Escalation Agent", confidence: 0.95 };
 
   return { agent: "Support Agent", confidence: 0.7 };
 }
 
 function isOffTopic(message: string): boolean {
   const offTopicPatterns = [
-    /\b(recipe|cook|food|restaurant)\b/i,
-    /\b(politic|election|government|president)\b/i,
-    /\b(weather|forecast|temperature)\b/i,
-    /\b(movie|film|show|netflix|youtube)\b/i,
-    /\b(code|program|developer|github)\b/i,
-    /\b(math|calculate|formula)\b/i,
-    /\b(joke|funny|laugh|meme)\b/i,
+    /\b(recipe|cook|food|restaurant|eat|meal|dish|cuisine)\b/i,
+    /\b(politic|election|government|president|vote|party)\b/i,
+    /\b(weather|forecast|temperature|rain|snow|sunny)\b/i,
+    /\b(movie|movies|film|films|show|shows|netflix|youtube|series|episode|watch|cinema)\b/i,
+    /\b(music|song|artist|album|spotify|concert|band)\b/i,
+    /\b(code|program|developer|github|javascript|python|software)\b/i,
+    /\b(math|calculate|formula|equation|algebra)\b/i,
+    /\b(joke|funny|laugh|meme|humor|comedy)\b/i,
+    /\b(sport|football|basketball|soccer|cricket|match|game|team)\b/i,
+    /\b(news|headline|current event|world event)\b/i,
+    /\b(travel|hotel|flight|vacation|tourism|trip)\b/i,
   ];
   return offTopicPatterns.some(p => p.test(message));
 }
