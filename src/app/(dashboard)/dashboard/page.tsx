@@ -62,12 +62,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">Dashboard</h1>
           <p className="text-sm text-text-muted mt-0.5">TechVault AI Support — Real-time overview</p>
         </div>
-        <Link href="/chat">
+        <Link href="/chat" className="self-start sm:self-auto">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn-primary text-sm">
             <MessageSquare className="h-4 w-4" /> Open Chat
           </motion.button>

@@ -22,13 +22,13 @@ export default function DashboardHeader() {
   const pageTitle = BREADCRUMB_MAP[pathname] ?? "NexDesk";
 
   return (
-    <div className="sticky top-0 z-30 glass border-b border-border/60 px-6 py-3">
+    <div className="sticky top-0 z-30 glass border-b border-border/60 pl-16 pr-4 py-3 lg:px-6 lg:py-3">
       <div className="flex items-center justify-between gap-4">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-sm">
-          <span className="text-text-muted">NexDesk</span>
-          <ChevronRight className="h-3.5 w-3.5 text-text-disabled" />
-          <span className="font-medium text-text-primary">{pageTitle}</span>
+        <div className="flex items-center gap-1.5 text-sm min-w-0">
+          <span className="text-text-muted hidden sm:inline">NexDesk</span>
+          <ChevronRight className="h-3.5 w-3.5 text-text-disabled hidden sm:inline" />
+          <span className="font-medium text-text-primary truncate">{pageTitle}</span>
         </div>
 
         {/* Right side */}
