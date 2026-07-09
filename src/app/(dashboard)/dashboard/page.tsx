@@ -1,21 +1,39 @@
 "use client";
-import { motion } from "framer-motion";
-import { StatCard, Badge, Card } from "@/components/ui";
-import { Ticket, CheckCircle, Clock, Star, TrendingUp, Zap, ArrowRight, MessageSquare } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { StatCard, Card } from "@/components/ui";
+import { Ticket, CheckCircle, Clock, AlertTriangle, TrendingUp, ArrowRight, MessageSquare, Radio } from "lucide-react";
 import Link from "next/link";
 import { cn, formatRelativeTime, getTicketStatusColor, getTicketPriorityColor } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import type { AgentName } from "@/types";
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-const MOCK_STATS = { total: 142, open: 23, resolved: 11, satisfaction: 4.8, resolution: 94, delta_tickets: -12, delta_satisfaction: 5 };
+interface DashboardTicket {
+  id: string;
+  ticket_number: string;
+  customer_name: string | null;
+  subject: string;
+  type: string;
+  status: string;
+  priority: string;
+  agent_handled: string;
+  created_at: string;
+}
 
-const MOCK_TICKETS = [
-  { id: "t1", ticket_number: "TKT-A3X9", customer_name: "Sarah Chen", subject: "iPhone 15 Pro screen flickering", type: "warranty" as const, status: "open" as const, priority: "high" as const, created_at: new Date(Date.now() - 12 * 60000).toISOString(), agent_handled: "Replacement Agent" as AgentName },
-  { id: "t2", ticket_number: "TKT-B7K2", customer_name: "Marcus Williams", subject: "Return request for MacBook Air M3", type: "return" as const, status: "in_progress" as const, priority: "medium" as const, created_at: new Date(Date.now() - 35 * 60000).toISOString(), agent_handled: "Returns Agent" as AgentName },
-  { id: "t3", ticket_number: "TKT-C1M5", customer_name: "Aisha Patel", subject: "Where is my Galaxy S24 Ultra order?", type: "tracking" as const, status: "resolved" as const, priority: "low" as const, created_at: new Date(Date.now() - 2 * 3600000).toISOString(), agent_handled: "Support Agent" as AgentName },
-  { id: "t4", ticket_number: "TKT-D4R8", customer_name: "James O'Brien", subject: "Sony WH-1000XM5 not pairing", type: "general" as const, status: "open" as const, priority: "medium" as const, created_at: new Date(Date.now() - 4 * 3600000).toISOString(), agent_handled: "Support Agent" as AgentName },
-  { id: "t5", ticket_number: "TKT-E9P3", customer_name: "Fatima Al-Rashid", subject: "Warranty claim - AirPods Pro 2", type: "warranty" as const, status: "escalated" as const, priority: "urgent" as const, created_at: new Date(Date.now() - 6 * 3600000).toISOString(), agent_handled: "Escalation Agent" as AgentName },
-];
+interface ActivityItem {
+  id: string;
+  agent_name: string;
+  action: string;
+  ticket_number: string | null;
+  created_at: string;
+}
+
+interface DashboardStats {
+  total: number;
+  open: number;
+  resolvedToday: number;
+  escalated: number;
+  resolutionRate: number;
+}
 
 const AGENT_COLORS: Record<string, string> = {
   "Triage Orchestrator": "text-cyan",
@@ -26,37 +44,55 @@ const AGENT_COLORS: Record<string, string> = {
   "Returns Agent":       "text-cyan",
   "Replacement Agent":   "text-violet",
   "Escalation Agent":    "text-rose",
+  "Analytics Agent":     "text-emerald",
 };
 
-interface AgentFeedItem { id: string; agent: AgentName; action: string; ticket: string; time: string; }
-
-const INITIAL_FEED: AgentFeedItem[] = [
-  { id: "f1", agent: "Triage Orchestrator", action: "Routed ticket to Returns Agent", ticket: "TKT-B7K2", time: "just now" },
-  { id: "f2", agent: "Replacement Agent",   action: "Approved replacement request",  ticket: "TKT-A3X9", time: "2m ago" },
-  { id: "f3", agent: "Support Agent",       action: "Resolved tracking inquiry",     ticket: "TKT-C1M5", time: "5m ago" },
-  { id: "f4", agent: "Policy Agent",        action: "Explained return eligibility",  ticket: "TKT-F2X1", time: "8m ago" },
-  { id: "f5", agent: "Escalation Agent",    action: "Escalated warranty complaint",  ticket: "TKT-E9P3", time: "12m ago" },
-];
-
-const NEW_FEED_ITEMS: AgentFeedItem[] = [
-  { id: "f6", agent: "Inventory Agent",     action: "Checked stock for iPhone 15 PM", ticket: "TKT-G5K3", time: "just now" },
-  { id: "f7", agent: "Catalog Agent",       action: "Compared MacBook vs ThinkPad",  ticket: "TKT-H8R2", time: "just now" },
-  { id: "f8", agent: "Returns Agent",       action: "Initiated refund process",       ticket: "TKT-I1M7", time: "just now" },
-];
-
 export default function DashboardPage() {
-  const [feed, setFeed] = useState<AgentFeedItem[]>(INITIAL_FEED);
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [tickets, setTickets] = useState<DashboardTicket[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newestActivityId, setNewestActivityId] = useState<string | null>(null);
 
-  // Simulate live agent feed
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/dashboard-stats");
+      const data = await res.json();
+      setStats(data.stats);
+      setTickets(data.tickets ?? []);
+      setActivity(data.activity ?? []);
+    } catch (err) {
+      console.error("[dashboard] failed to load real data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newItem = NEW_FEED_ITEMS[Math.floor(Math.random() * NEW_FEED_ITEMS.length)];
-      setFeed(prev => [{ ...newItem, id: Math.random().toString(36).slice(2), time: "just now" }, ...prev].slice(0, 8));
-      setActiveIdx(0);
-      setTimeout(() => setActiveIdx(-1), 2000);
-    }, 4000);
-    return () => clearInterval(interval);
+    load();
+  }, [load]);
+
+  // Genuine realtime feed -- subscribes to real inserts on agent_activity,
+  // not a simulated setInterval. New rows appear the moment they're written.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel("agent_activity_feed")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "agent_activity" },
+        (payload) => {
+          const row = payload.new as ActivityItem;
+          setActivity((prev) => [row, ...prev].slice(0, 8));
+          setNewestActivityId(row.id);
+          setTimeout(() => setNewestActivityId((cur) => (cur === row.id ? null : cur)), 2000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
@@ -76,10 +112,10 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Tickets" value={MOCK_STATS.total} delta={MOCK_STATS.delta_tickets} icon={<Ticket className="h-5 w-5" />} color="cyan" />
-        <StatCard label="Open Tickets"  value={MOCK_STATS.open}  icon={<Clock className="h-5 w-5" />} color="amber" />
-        <StatCard label="Resolved Today" value={MOCK_STATS.resolved} icon={<CheckCircle className="h-5 w-5" />} color="green" />
-        <StatCard label="Satisfaction"  value={`${MOCK_STATS.satisfaction}/5`} delta={MOCK_STATS.delta_satisfaction} icon={<Star className="h-5 w-5" />} color="violet" />
+        <StatCard label="Total Tickets" value={loading ? "—" : stats?.total ?? 0} icon={<Ticket className="h-5 w-5" />} color="cyan" />
+        <StatCard label="Open Tickets"  value={loading ? "—" : stats?.open ?? 0} icon={<Clock className="h-5 w-5" />} color="amber" />
+        <StatCard label="Resolved Today" value={loading ? "—" : stats?.resolvedToday ?? 0} icon={<CheckCircle className="h-5 w-5" />} color="green" />
+        <StatCard label="Escalated" value={loading ? "—" : stats?.escalated ?? 0} icon={<AlertTriangle className="h-5 w-5" />} color="rose" />
       </div>
 
       {/* Main Grid */}
@@ -94,72 +130,89 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div>
-              {MOCK_TICKETS.map((ticket, i) => (
-                <motion.div key={ticket.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-4 px-5 py-3.5 border-b border-border/50 last:border-0 hover:bg-raised/50 transition-colors cursor-pointer group">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-mono text-text-muted">{ticket.ticket_number}</span>
-                      <Badge variant={ticket.priority === "urgent" ? "rose" : ticket.priority === "high" ? "amber" : "gray"} className="text-[10px]">{ticket.priority}</Badge>
+              {loading ? (
+                <div className="p-5 space-y-3">
+                  {[1, 2, 3].map((i) => <div key={i} className="skeleton h-14 w-full" />)}
+                </div>
+              ) : tickets.length === 0 ? (
+                <div className="p-10 text-center">
+                  <p className="text-sm text-text-muted mb-3">No tickets yet</p>
+                  <Link href="/chat" className="text-xs text-cyan hover:text-cyan/80">Try the live chat to create one →</Link>
+                </div>
+              ) : (
+                tickets.map((ticket, i) => (
+                  <motion.div key={ticket.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                    className="flex items-center gap-4 px-5 py-3.5 border-b border-border/50 last:border-0 hover:bg-raised/50 transition-colors cursor-pointer group">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-mono text-text-muted">{ticket.ticket_number}</span>
+                        <span className={cn("badge text-[10px]", getTicketPriorityColor(ticket.priority as "low" | "medium" | "high" | "urgent"))}>{ticket.priority}</span>
+                      </div>
+                      <p className="text-sm text-text-primary truncate group-hover:text-cyan transition-colors">{ticket.subject}</p>
+                      <p className="text-xs text-text-muted mt-0.5">{ticket.customer_name ?? "Anonymous visitor"} · {formatRelativeTime(ticket.created_at)}</p>
                     </div>
-                    <p className="text-sm font-medium text-text-primary truncate group-hover:text-cyan transition-colors">{ticket.subject}</p>
-                    <p className="text-xs text-text-muted mt-0.5">{ticket.customer_name} · {formatRelativeTime(ticket.created_at)}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                    <span className={cn("badge text-[10px]", getTicketStatusColor(ticket.status))}>{ticket.status.replace("_", " ")}</span>
-                    {ticket.agent_handled && (
-                      <span className={cn("text-[10px] font-medium", AGENT_COLORS[ticket.agent_handled] ?? "text-text-muted")}>{ticket.agent_handled}</span>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
+                      <span className={cn("badge text-[10px]", getTicketStatusColor(ticket.status as "open" | "in_progress" | "resolved" | "closed" | "escalated"))}>{ticket.status.replace("_", " ")}</span>
+                      <span className={cn("text-[10px]", AGENT_COLORS[ticket.agent_handled] ?? "text-cyan")}>{ticket.agent_handled}</span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
           </Card>
         </div>
 
-        {/* Live Agent Feed */}
+        {/* Live Agent Feed -- genuine Supabase realtime subscription */}
         <div>
           <Card hover={false} className="p-0 overflow-hidden h-full">
             <div className="flex items-center justify-between px-4 py-4 border-b border-border">
               <h2 className="text-sm font-semibold text-text-primary">Live Agent Feed</h2>
               <div className="flex items-center gap-1.5">
-                <span className="status-dot online animate-pulse" />
+                <Radio className="h-3 w-3 text-emerald" />
                 <span className="text-[10px] text-emerald font-medium">Live</span>
               </div>
             </div>
             <div className="p-3 space-y-2 overflow-y-auto max-h-[400px]">
-              {feed.map((item, i) => (
-                <motion.div key={item.id} initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className={cn("rounded-lg p-3 border transition-all duration-500", i === 0 && activeIdx === 0 ? "bg-cyan/5 border-cyan/15" : "bg-raised/30 border-border/50")}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={cn("text-[10px] font-semibold", AGENT_COLORS[item.agent] ?? "text-cyan")}>{item.agent}</span>
-                    <span className="text-[10px] text-text-muted">{item.time}</span>
-                  </div>
-                  <p className="text-xs text-text-secondary">{item.action}</p>
-                  <span className="text-[10px] font-mono text-text-muted mt-1 block">{item.ticket}</span>
-                </motion.div>
-              ))}
+              {loading ? (
+                [1, 2, 3].map((i) => <div key={i} className="skeleton h-16 w-full" />)
+              ) : activity.length === 0 ? (
+                <p className="text-xs text-text-muted p-4 text-center">No agent activity yet — start a chat to see it here in real time.</p>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {activity.map((item) => (
+                    <motion.div key={item.id} initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                      className={cn("rounded-lg p-3 border transition-all duration-500", item.id === newestActivityId ? "bg-cyan/5 border-cyan/15" : "bg-raised/30 border-border/50")}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={cn("text-[10px] font-semibold", AGENT_COLORS[item.agent_name] ?? "text-cyan")}>{item.agent_name}</span>
+                        <span className="text-[10px] text-text-muted">{formatRelativeTime(item.created_at)}</span>
+                      </div>
+                      <p className="text-xs text-text-secondary">{item.action}</p>
+                      {item.ticket_number && <span className="text-[10px] font-mono text-text-muted mt-1 block">{item.ticket_number}</span>}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
             </div>
           </Card>
         </div>
       </div>
 
-      {/* Resolution Rate Bar */}
+      {/* Resolution Rate Bar -- real, computed from actual ticket counts */}
       <Card hover={false}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-cyan" />
             <h3 className="text-sm font-semibold text-text-primary">Resolution Rate</h3>
           </div>
-          <span className="text-lg font-bold font-mono text-cyan">{MOCK_STATS.resolution}%</span>
+          <span className="text-lg font-bold font-mono text-cyan">{loading ? "—" : `${stats?.resolutionRate ?? 0}%`}</span>
         </div>
         <div className="h-2 rounded-full bg-border overflow-hidden">
-          <motion.div initial={{ width: 0 }} animate={{ width: `${MOCK_STATS.resolution}%` }} transition={{ duration: 1.2, ease: "easeOut" }}
+          <motion.div initial={{ width: 0 }} animate={{ width: `${stats?.resolutionRate ?? 0}%` }} transition={{ duration: 1.2, ease: "easeOut" }}
             className="h-full rounded-full bg-gradient-to-r from-cyan to-violet" />
         </div>
         <div className="flex justify-between mt-2">
           <span className="text-[11px] text-text-muted">0%</span>
-          <span className="text-[11px] text-text-muted">Industry avg: 78%</span>
+          <span className="text-[11px] text-text-muted">{stats?.total ? `${stats.total} total tickets` : "No tickets yet"}</span>
           <span className="text-[11px] text-text-muted">100%</span>
         </div>
       </Card>

@@ -5,6 +5,7 @@
 create table if not exists tickets (
   id uuid primary key default gen_random_uuid(),
   ticket_number text unique not null,
+  customer_name text,
   subject text not null,
   type text not null default 'general',
   status text not null default 'open',
