@@ -13,12 +13,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function Button({ variant = "primary", size = "md", loading, icon, children, className, disabled, ...props }: ButtonProps) {
-  const base = "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = {
     primary:   "btn-primary",
     secondary: "btn-secondary",
     ghost:     "btn-ghost",
-    danger:    "inline-flex items-center justify-center gap-2 px-4 py-2 bg-rose/10 text-rose border border-rose/20 rounded-lg hover:bg-rose/20 transition-all text-sm font-medium cursor-pointer",
+    danger:    "inline-flex items-center justify-center gap-2 px-4 py-2 bg-rose/10 text-rose border border-rose/20 rounded-[5px] hover:bg-rose/20 transition-all text-sm font-medium cursor-pointer",
   };
   const sizes = {
     sm: "px-3 py-1.5 text-xs",
@@ -59,7 +59,7 @@ export function Card({ children, className, hover = true, glow, onClick }: CardP
     <motion.div
       whileHover={hover ? { y: -2 } : undefined}
       onClick={onClick}
-      className={cn("card-static rounded-[14px] p-4", hover && "card", glow === "cyan" && "glow-cyan", glow === "violet" && "glow-violet", onClick && "cursor-pointer", className)}
+      className={cn("card-static rounded-2xl p-4", hover && "card", glow === "cyan" && "glow-cyan", glow === "violet" && "glow-violet", onClick && "cursor-pointer", className)}
     >
       {children}
     </motion.div>

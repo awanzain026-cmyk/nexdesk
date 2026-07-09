@@ -41,17 +41,17 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-surface/90 border-b border-border/50">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald">
+      {/* Floating pill nav */}
+      <nav className="fixed top-4 left-0 right-0 z-50 px-6 flex justify-center">
+        <div className="nav-pill w-full max-w-2xl h-14 px-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 pl-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan">
               <Zap className="h-3.5 w-3.5 text-void" />
             </div>
-            <span className="font-bold text-text-primary tracking-tight">NexDesk</span>
+            <span className="font-medium text-text-primary tracking-tight">NexDesk</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm text-text-muted hover:text-text-primary transition-colors">Dashboard</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-sm text-text-muted hover:text-text-primary transition-colors px-2">Dashboard</Link>
             <Link href="/chat" className="btn-primary text-sm py-2 px-4">
               Try Live Chat <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -64,7 +64,7 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 badge badge-green mb-8 text-xs">
+              className="inline-flex items-center gap-2 badge badge-cyan mb-8 text-xs">
               <span className="status-dot online" /> 8 AI agents, one support desk
             </motion.div>
 
@@ -72,7 +72,7 @@ export default function LandingPage() {
               className="font-[family-name:var(--font-display)] text-5xl sm:text-6xl font-normal tracking-tight leading-[1.1] mb-6">
               <span className="text-text-primary">AI support that</span>
               <br />
-              <span className="text-emerald">never sleeps</span>
+              <span className="text-cyan">never sleeps</span>
             </motion.h1>
 
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
@@ -110,7 +110,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-raised">
                 <span className="h-2.5 w-2.5 rounded-full bg-rose/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-amber/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-cyan/60" />
                 <span className="ml-3 text-xs text-text-muted">NexDesk — Live Chat</span>
               </div>
               <div className="p-5 space-y-3">
@@ -124,7 +124,7 @@ export default function LandingPage() {
                   >
                     <div className={m.from === "user" ? "chat-bubble-user max-w-[85%]" : "chat-bubble-agent max-w-[85%]"}>
                       {m.from === "agent" && (
-                        <p className="text-[10px] font-semibold text-emerald mb-1">{m.agent}</p>
+                        <p className="text-[10px] font-semibold text-cyan mb-1">{m.agent}</p>
                       )}
                       <p className="text-sm text-text-primary leading-snug">{m.text}</p>
                     </div>
@@ -142,7 +142,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {STATS.map((s) => (
               <div key={s.label} className="card-static rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold font-mono text-emerald">{s.value}</p>
+                <p className="text-2xl font-medium font-mono text-cyan">{s.value}</p>
                 <p className="text-xs text-text-muted mt-1">{s.label}</p>
               </div>
             ))}
@@ -154,7 +154,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 border-y border-border/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <span className="badge badge-green mb-4 text-xs">Agent Architecture</span>
+            <span className="badge badge-cyan mb-4 text-xs">Agent Architecture</span>
             <h2 className="text-3xl font-[family-name:var(--font-display)] font-normal text-text-primary">Meet your AI team</h2>
             <p className="text-text-secondary mt-3 max-w-xl mx-auto">8 specialized agents, each trained for a specific support domain. Working together seamlessly.</p>
           </div>
@@ -162,10 +162,10 @@ export default function LandingPage() {
             className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {AGENTS.map((agent) => (
               <motion.div key={agent.name} variants={item}
-                className="rounded-xl border border-border bg-surface p-4 transition-all hover:border-emerald/30 hover:-translate-y-0.5 cursor-default">
+                className="rounded-xl border border-border bg-surface p-4 transition-all hover:border-cyan/30 hover:-translate-y-0.5 cursor-default">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="status-dot online" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald">Active</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-cyan">Active</span>
                 </div>
                 <p className="text-sm font-semibold leading-tight mb-1 text-text-primary">{agent.name}</p>
                 <p className="text-[11px] text-text-muted">{agent.role}</p>
@@ -179,7 +179,7 @@ export default function LandingPage() {
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <span className="badge badge-green mb-4 text-xs">Platform Features</span>
+            <span className="badge badge-cyan mb-4 text-xs">Platform Features</span>
             <h2 className="text-3xl font-[family-name:var(--font-display)] font-normal text-text-primary">Everything you need</h2>
             <p className="text-text-secondary mt-3">Built for enterprise customer support operations.</p>
           </div>
@@ -187,8 +187,8 @@ export default function LandingPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => (
               <motion.div key={f.title} variants={item} className="card p-5">
-                <div className="inline-flex p-2.5 rounded-xl border border-emerald/20 bg-emerald/10 mb-4">
-                  <div className="text-emerald">{f.icon}</div>
+                <div className="inline-flex p-2.5 rounded-xl border border-cyan/20 bg-cyan/10 mb-4">
+                  <div className="text-cyan">{f.icon}</div>
                 </div>
                 <h3 className="text-sm font-semibold text-text-primary mb-2">{f.title}</h3>
                 <p className="text-xs text-text-muted leading-relaxed">{f.desc}</p>
@@ -201,7 +201,7 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="card-static rounded-2xl p-12 text-center border border-emerald/15 bg-emerald/[0.03]">
+          <div className="card-static rounded-2xl p-12 text-center border border-cyan/15 bg-cyan/[0.03]">
             <h2 className="text-3xl font-[family-name:var(--font-display)] font-normal text-text-primary mb-4">See it handle a real ticket</h2>
             <p className="text-text-secondary mb-8">Live demo, real AI agents, the actual TechVault product catalog — not a script.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -224,10 +224,10 @@ export default function LandingPage() {
       <footer className="border-t border-border py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-cyan">
               <Zap className="h-3 w-3 text-void" />
             </div>
-            <span className="text-sm font-bold text-text-primary">NexDesk</span>
+            <span className="text-sm font-medium text-text-primary">NexDesk</span>
             <span className="text-xs text-text-muted">— AI Customer Support Platform</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-text-muted">
