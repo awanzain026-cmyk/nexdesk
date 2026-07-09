@@ -20,6 +20,7 @@
   /* Fonts */
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "JetBrains Mono", monospace;
+  --font-display: "Instrument Serif", Georgia, serif;
 
   /* Shadows */
   --shadow-glow-cyan: 0 0 20px rgba(0,212,255,0.2), 0 0 60px rgba(0,212,255,0.08);
