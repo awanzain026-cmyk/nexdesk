@@ -83,8 +83,8 @@ export default function TicketsPage() {
           </div>
         </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-border bg-raised/30">
+        {/* Table Header -- desktop only */}
+        <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 border-b border-border bg-raised/30">
           {["Ticket", "Subject", "Customer", "Type", "Priority", "Status", "Agent", "Time"].map((h, i) => (
             <div key={h} className={cn("text-[11px] font-semibold uppercase tracking-wider text-text-muted", i === 0 ? "col-span-1" : i === 1 ? "col-span-3" : i === 2 ? "col-span-2" : "col-span-1")}>
               {h}
@@ -99,31 +99,51 @@ export default function TicketsPage() {
           ) : (
             filtered.map((ticket, i) => (
               <motion.div key={ticket.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                className="grid grid-cols-12 gap-4 px-5 py-3.5 border-b border-border/50 last:border-0 hover:bg-raised/40 transition-colors items-center cursor-pointer">
-                <div className="col-span-1">
-                  <span className="text-[10px] font-mono text-text-muted">{ticket.ticket_number}</span>
+                className="border-b border-border/50 last:border-0 hover:bg-raised/40 transition-colors cursor-pointer">
+
+                {/* Desktop row */}
+                <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3.5 items-center">
+                  <div className="col-span-1">
+                    <span className="text-[10px] font-mono text-text-muted">{ticket.ticket_number}</span>
+                  </div>
+                  <div className="col-span-3">
+                    <p className="text-sm text-text-primary truncate">{ticket.subject}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-text-secondary truncate">{ticket.customer_name}</p>
+                    <p className="text-[10px] text-text-muted truncate">{ticket.customer_email}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="badge badge-gray text-[10px]">{getTicketTypeLabel(ticket.type)}</span>
+                  </div>
+                  <div className="col-span-1">
+                    <span className={cn("badge text-[10px]", getTicketPriorityColor(ticket.priority))}>{ticket.priority}</span>
+                  </div>
+                  <div className="col-span-1">
+                    <span className={cn("badge text-[10px]", getTicketStatusColor(ticket.status))}>{ticket.status.replace("_", " ")}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-[11px] text-text-muted truncate">{ticket.agent_handled}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <p className="text-[10px] text-text-disabled whitespace-nowrap">{formatRelativeTime(ticket.created_at)}</p>
+                  </div>
                 </div>
-                <div className="col-span-3">
-                  <p className="text-sm text-text-primary truncate">{ticket.subject}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-xs text-text-secondary truncate">{ticket.customer_name}</p>
-                  <p className="text-[10px] text-text-muted truncate">{ticket.customer_email}</p>
-                </div>
-                <div className="col-span-1">
-                  <span className="badge badge-gray text-[10px]">{getTicketTypeLabel(ticket.type)}</span>
-                </div>
-                <div className="col-span-1">
-                  <span className={cn("badge text-[10px]", getTicketPriorityColor(ticket.priority))}>{ticket.priority}</span>
-                </div>
-                <div className="col-span-1">
-                  <span className={cn("badge text-[10px]", getTicketStatusColor(ticket.status))}>{ticket.status.replace("_", " ")}</span>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-[11px] text-text-muted truncate">{ticket.agent_handled}</p>
-                </div>
-                <div className="col-span-1">
-                  <p className="text-[10px] text-text-disabled whitespace-nowrap">{formatRelativeTime(ticket.created_at)}</p>
+
+                {/* Mobile card */}
+                <div className="md:hidden px-4 py-3.5 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[10px] font-mono text-text-muted">{ticket.ticket_number}</span>
+                    <span className="text-[10px] text-text-disabled whitespace-nowrap">{formatRelativeTime(ticket.created_at)}</span>
+                  </div>
+                  <p className="text-sm text-text-primary leading-snug">{ticket.subject}</p>
+                  <p className="text-xs text-text-secondary">{ticket.customer_name} <span className="text-text-muted">· {ticket.customer_email}</span></p>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="badge badge-gray text-[10px]">{getTicketTypeLabel(ticket.type)}</span>
+                    <span className={cn("badge text-[10px]", getTicketPriorityColor(ticket.priority))}>{ticket.priority}</span>
+                    <span className={cn("badge text-[10px]", getTicketStatusColor(ticket.status))}>{ticket.status.replace("_", " ")}</span>
+                  </div>
+                  <p className="text-[11px] text-text-muted">Handled by {ticket.agent_handled}</p>
                 </div>
               </motion.div>
             ))
