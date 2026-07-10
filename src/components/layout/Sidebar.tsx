@@ -86,13 +86,8 @@ export default function Sidebar({ user }: SidebarProps) {
       {/* User */}
       {user && (
         <div className="px-3 pb-4 border-t border-border pt-3">
-          <button
-            onClick={async () => {
-              const { createClient } = await import("@/lib/supabase/client");
-              const supabase = createClient();
-              await supabase.auth.signOut();
-              window.location.href = "/login";
-            }}
+          <Link
+            href="/"
             className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-raised transition-colors cursor-pointer group text-left"
           >
             <Avatar name={user.full_name || user.email} size="sm" />
@@ -101,7 +96,7 @@ export default function Sidebar({ user }: SidebarProps) {
               <p className="text-[10px] text-text-muted truncate">{user.email}</p>
             </div>
             <LogOut className="h-3.5 w-3.5 text-text-disabled group-hover:text-rose transition-colors" />
-          </button>
+          </Link>
         </div>
       )}
     </div>
