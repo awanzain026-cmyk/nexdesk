@@ -2,30 +2,46 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Zap, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Zap, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Button, Input } from "@/components/ui";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("admin@techvault.com");
-  const [password, setPassword] = useState("nexdesk2025");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    // Demo: skip real auth, go straight to dashboard
-    await new Promise(r => setTimeout(r, 800));
-    router.push("/dashboard");
+
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+    setLoading(false);
+
+    if (authError) {
+      setError(authError.message === "Invalid login credentials"
+        ? "Incorrect email or password."
+        : authError.message);
+      return;
+    }
+
+    const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+    router.push(redirectTo);
+    router.refresh();
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      {/* Logo */}
       <div className="text-center">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan to-violet shadow-glow-cyan mb-4">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan shadow-glow-cyan mb-4">
           <Zap className="h-6 w-6 text-void" />
         </div>
         <h1 className="text-2xl font-bold text-text-primary">Welcome back</h1>
@@ -34,32 +50,32 @@ export default function LoginPage() {
 
       <div className="card-static rounded-2xl p-8">
         <form onSubmit={handleLogin} className="space-y-4">
-          <Input label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<Mail className="h-4 w-4" />} placeholder="admin@techvault.com" />
+          <Input label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<Mail className="h-4 w-4" />} placeholder="you@company.com" required />
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1.5">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
               <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                className="input-field pl-9 pr-10" placeholder="••••••••" />
+                className="input-field pl-9 pr-10" placeholder="••••••••" required />
               <button type="button" onClick={() => setShowPass(!showPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
                 {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-lg bg-rose/10 border border-rose/20 p-3">
+              <AlertCircle className="h-4 w-4 text-rose flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-rose">{error}</p>
+            </div>
+          )}
+
           <Button type="submit" loading={loading} className="w-full mt-2">Sign In</Button>
         </form>
         <p className="text-center text-xs text-text-muted mt-5">
-          Demo credentials pre-filled. <Link href="/signup" className="text-cyan hover:underline">Create account</Link>
+          Don&apos;t have an account? <Link href="/signup" className="text-cyan hover:underline">Create account</Link>
         </p>
-      </div>
-
-      <div className="card-static rounded-xl p-4 flex items-start gap-3">
-        <div className="h-2 w-2 rounded-full bg-emerald mt-1.5 flex-shrink-0 shadow-[0_0_6px_rgba(0,229,160,0.6)]" />
-        <div>
-          <p className="text-xs font-medium text-text-primary">Demo Mode Active</p>
-          <p className="text-[11px] text-text-muted mt-0.5">No Supabase setup needed. Click Sign In to access the full dashboard with all 8 AI agents.</p>
-        </div>
       </div>
     </motion.div>
   );
