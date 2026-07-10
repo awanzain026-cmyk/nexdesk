@@ -21,21 +21,30 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
-    setLoading(false);
+      if (authError) {
+        setError(authError.message === "Invalid login credentials"
+          ? "Incorrect email or password."
+          : authError.message);
+        return;
+      }
 
-    if (authError) {
-      setError(authError.message === "Invalid login credentials"
-        ? "Incorrect email or password."
-        : authError.message);
-      return;
+      const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+      router.push(redirectTo);
+      router.refresh();
+    } catch (err) {
+      console.error("[login] Unexpected error:", err);
+      setError(
+        err instanceof Error
+          ? `Something went wrong: ${err.message}. Check your connection and try again.`
+          : "Something went wrong. Check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    const redirectTo = searchParams.get("redirectTo") || "/dashboard";
-    router.push(redirectTo);
-    router.refresh();
   };
 
   return (

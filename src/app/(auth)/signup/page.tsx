@@ -24,28 +24,38 @@ export default function SignupPage() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName } },
-    });
-    setLoading(false);
+    try {
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName } },
+      });
 
-    if (authError) {
-      setError(authError.message);
-      return;
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      // If Supabase's "Confirm email" setting is on, there's no session yet --
+      // the user must click the link Supabase just emailed them.
+      if (data.user && !data.session) {
+        setSubmitted(true);
+        return;
+      }
+
+      // Confirm-email is off: they're logged in immediately.
+      window.location.href = "/dashboard";
+    } catch (err) {
+      console.error("[signup] Unexpected error:", err);
+      setError(
+        err instanceof Error
+          ? `Something went wrong: ${err.message}. Check your connection and try again.`
+          : "Something went wrong. Check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    // If Supabase's "Confirm email" setting is on, there's no session yet --
-    // the user must click the link Supabase just emailed them.
-    if (data.user && !data.session) {
-      setSubmitted(true);
-      return;
-    }
-
-    // Confirm-email is off: they're logged in immediately.
-    window.location.href = "/dashboard";
   };
 
   if (submitted) {
