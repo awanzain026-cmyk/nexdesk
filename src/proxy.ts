@@ -11,12 +11,24 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  let response = NextResponse.next({ request });
+  const redirectToLogin = () => {
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("redirectTo", path);
+    return NextResponse.redirect(redirectUrl);
+  };
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("[proxy] Supabase env vars missing -- failing safe to /login instead of crashing");
+    return redirectToLogin();
+  }
+
+  try {
+    let response = NextResponse.next({ request });
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -27,18 +39,19 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
+    });
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return redirectToLogin();
     }
-  );
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirectTo", path);
-    return NextResponse.redirect(redirectUrl);
+    return response;
+  } catch (err) {
+    console.error("[proxy] Unexpected error checking auth -- failing safe to /login:", err);
+    return redirectToLogin();
   }
-
-  return response;
 }
 
 export const config = {
