@@ -41,7 +41,7 @@ export default function ProductsPage() {
       </motion.div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: "Total Products", value: PRODUCTS.length, icon: <Package className="h-4 w-4" />, color: "text-cyan", bg: "bg-cyan/10 border-cyan/20" },
           { label: "Inventory Value", value: formatCurrency(totalValue), icon: <TrendingUp className="h-4 w-4" />, color: "text-violet", bg: "bg-violet/10 border-violet/20" },
