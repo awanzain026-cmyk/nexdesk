@@ -1,10 +1,16 @@
 "use client";
 import { motion } from "framer-motion";
-import { Card, Input, Button } from "@/components/ui";
-import { Settings, Store, Bell, Shield, Zap } from "lucide-react";
+import { Card, Input, Button, useToast } from "@/components/ui";
+import { Settings, Store, Bell, Zap } from "lucide-react";
 import { STORE_NAME } from "@/lib/data/products";
 
 export default function SettingsPage() {
+  const { add } = useToast();
+
+  const handleSave = () => {
+    add("Settings aren't connected to a database yet -- this is a preview of the UI only.", "info");
+  };
+
   return (
     <div className="space-y-6 max-w-3xl">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
@@ -40,7 +46,7 @@ export default function SettingsPage() {
               ))}
             </div>
             <div className="mt-5 pt-4 border-t border-border flex justify-end">
-              <Button variant="secondary" size="sm">Save Changes</Button>
+              <Button variant="secondary" size="sm" onClick={handleSave}>Save Changes</Button>
             </div>
           </Card>
         </motion.div>
