@@ -1,14 +1,28 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Ticket, MessageSquare, Package,
-  BarChart3, Settings, Zap, ChevronRight, LogOut, X, Menu
+  BarChart3, Settings, Zap, ChevronRight, LogOut, X, Menu,
+  GitMerge, Headphones, Package as PackageIcon, BookOpen,
+  FileText, Undo2, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "@/components/ui";
+
+const AGENT_ICONS = [
+  { name: "Triage", icon: GitMerge },
+  { name: "Support", icon: Headphones },
+  { name: "Inventory", icon: PackageIcon },
+  { name: "Catalog", icon: BookOpen },
+  { name: "Policy", icon: FileText },
+  { name: "Returns", icon: Undo2 },
+  { name: "Replace", icon: RefreshCw },
+  { name: "Escalate", icon: AlertTriangle },
+];
 
 const NAV_ITEMS = [
   { label: "General", items: [
@@ -27,9 +41,11 @@ const NAV_ITEMS = [
 
 interface SidebarProps { user?: { full_name: string | null; email: string } | null; }
 
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar({ user: propUser }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
+  const user = propUser || (session?.user ? { full_name: session.user.name ?? null, email: session.user.email ?? "" } : null);
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
@@ -74,9 +90,10 @@ export default function Sidebar({ user }: SidebarProps) {
             <span className="text-xs font-medium text-cyan">8 Agents Active</span>
           </div>
           <div className="grid grid-cols-4 gap-1">
-            {["T", "S", "I", "C", "P", "R", "Re", "E"].map((a, i) => (
-              <div key={i} className={cn("h-6 rounded-md flex items-center justify-center text-[9px] font-bold", i < 6 ? "bg-cyan/10 text-cyan" : "bg-violet/10 text-violet")}>
-                {a}
+            {AGENT_ICONS.map(({ name: agentName, icon: Icon }, i) => (
+              <div key={agentName} title={agentName}
+                className={cn("h-6 rounded-md flex items-center justify-center", i < 6 ? "bg-cyan/10 text-cyan" : "bg-violet/10 text-violet")}>
+                <Icon className="h-3.5 w-3.5" />
               </div>
             ))}
           </div>
@@ -86,8 +103,8 @@ export default function Sidebar({ user }: SidebarProps) {
       {/* User */}
       {user && (
         <div className="px-3 pb-4 border-t border-border pt-3">
-          <Link
-            href="/"
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-raised transition-colors cursor-pointer group text-left"
           >
             <Avatar name={user.full_name || user.email} size="sm" />
@@ -96,7 +113,7 @@ export default function Sidebar({ user }: SidebarProps) {
               <p className="text-[10px] text-text-muted truncate">{user.email}</p>
             </div>
             <LogOut className="h-3.5 w-3.5 text-text-disabled group-hover:text-rose transition-colors" />
-          </Link>
+          </button>
         </div>
       )}
     </div>
