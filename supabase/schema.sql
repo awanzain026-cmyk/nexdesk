@@ -16,6 +16,10 @@ create table if not exists tickets (
   updated_at timestamptz not null default now()
 );
 
+-- Safe to re-run even if tickets already existed before these columns did.
+alter table tickets add column if not exists customer_email text;
+alter table tickets add column if not exists order_id text;
+
 create table if not exists ticket_messages (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references tickets(id) on delete cascade,
