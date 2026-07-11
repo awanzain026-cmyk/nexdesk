@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Package, TrendingUp, AlertTriangle } from "lucide-react";
+import Image from "next/image";
+import { Search, Package, TrendingUp, AlertTriangle, Smartphone, Laptop, Headphones, Watch } from "lucide-react";
 import { Badge, Card, Input } from "@/components/ui";
 import { PRODUCTS } from "@/lib/data/products";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -16,6 +17,22 @@ const CATEGORIES: { label: string; value: ProductCategory | "all" }[] = [
 const CATEGORY_COLORS: Record<ProductCategory, string> = {
   phones: "badge-cyan", laptops: "badge-violet", headphones: "badge-green",
   smartwatches: "badge-amber", accessories: "badge-gray",
+};
+
+const CATEGORY_ICONS: Record<ProductCategory, React.ElementType> = {
+  phones: Smartphone, laptops: Laptop, headphones: Headphones,
+  smartwatches: Watch, accessories: Package,
+};
+
+const CATEGORY_TILE_BG: Record<ProductCategory, string> = {
+  phones: "bg-cyan/10 border-cyan/20", laptops: "bg-violet/10 border-violet/20",
+  headphones: "bg-emerald/10 border-emerald/20", smartwatches: "bg-amber/10 border-amber/20",
+  accessories: "bg-raised border-border",
+};
+
+const CATEGORY_ICON_COLOR: Record<ProductCategory, string> = {
+  phones: "text-cyan", laptops: "text-violet", headphones: "text-emerald",
+  smartwatches: "text-amber", accessories: "text-text-disabled",
 };
 
 export default function ProductsPage() {
@@ -77,10 +94,19 @@ export default function ProductsPage() {
         {filtered.map((product, i) => (
           <motion.div key={product.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
             className="card p-5 cursor-pointer">
-            {/* Product Image Placeholder */}
-            <div className="h-32 rounded-xl bg-gradient-to-br from-raised to-border/30 border border-border flex items-center justify-center mb-4">
-              <Package className="h-10 w-10 text-text-disabled" />
-            </div>
+            {/* Product visual: real image if available, otherwise a distinct per-category tile */}
+            {product.image_url ? (
+              <div className="relative h-32 rounded-xl overflow-hidden border border-border mb-4 bg-raised">
+                <Image src={product.image_url} alt={product.name} fill className="object-contain p-4" />
+              </div>
+            ) : (
+              <div className={cn("h-32 rounded-xl border flex items-center justify-center mb-4", CATEGORY_TILE_BG[product.category])}>
+                {(() => {
+                  const Icon = CATEGORY_ICONS[product.category];
+                  return <Icon className={cn("h-10 w-10", CATEGORY_ICON_COLOR[product.category])} />;
+                })()}
+              </div>
+            )}
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1 min-w-0">
                 <span className={cn("badge text-[10px] mb-1.5", CATEGORY_COLORS[product.category])}>{product.category}</span>

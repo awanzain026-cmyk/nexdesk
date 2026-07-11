@@ -113,28 +113,28 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100vh-6rem)] gap-4">
       {/* Chat Area */}
-      <div className="flex flex-col flex-1 card-static rounded-[14px] overflow-hidden">
+      <div className="flex flex-col flex-1 card-static rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface/50">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan/20 to-violet/20 border border-cyan/20">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-border bg-surface/50">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan/10 border border-cyan/20">
               <Zap className="h-4 w-4 text-cyan" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-text-primary">NexDesk AI</span>
-                <span className="status-dot online" />
+                <span className="status-dot online flex-shrink-0" />
               </div>
               {currentAgent ? (
-                <span className={cn("text-[11px] font-medium", agentColor.text)}>{currentAgent}</span>
+                <span className={cn("text-[11px] font-medium truncate block", agentColor.text)}>{currentAgent}</span>
               ) : (
                 <span className="text-[11px] text-text-muted">8 agents ready</span>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {ticketId && (
-              <Badge variant="cyan" dot className="text-[10px]">Ticket #{ticketId.slice(0, 8)}</Badge>
+              <Badge variant="cyan" dot className="text-[10px] hidden sm:inline-flex">Ticket #{ticketId.slice(0, 8)}</Badge>
             )}
             <button onClick={resetChat} className="btn-ghost text-xs gap-1.5">
               <RefreshCw className="h-3.5 w-3.5" /> New Chat
@@ -148,7 +148,7 @@ export default function ChatPage() {
             {messages.length === 0 && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center h-full text-center py-12">
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan/10 to-violet/10 border border-cyan/15 mb-6">
+                <div className="p-5 rounded-2xl bg-cyan/10 border border-cyan/20 mb-6">
                   <Sparkles className="h-10 w-10 text-cyan" />
                 </div>
                 <h2 className="text-xl font-bold text-text-primary mb-2">TechVault AI Support</h2>
@@ -238,7 +238,7 @@ export default function ChatPage() {
 
       {/* Agent Panel */}
       <div className="hidden xl:flex w-56 flex-col gap-3">
-        <div className="card-static rounded-[14px] p-4">
+        <div className="card-static rounded-2xl p-4">
           <h3 className="text-xs font-semibold text-text-primary mb-3 flex items-center gap-2">
             <Zap className="h-3.5 w-3.5 text-cyan" /> Active Agents
           </h3>
@@ -254,7 +254,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="card-static rounded-[14px] p-4">
+        <div className="card-static rounded-2xl p-4">
           <h3 className="text-xs font-semibold text-text-primary mb-3">Quick Stats</h3>
           <div className="space-y-3">
             {[{ label: "Avg Response", value: "< 3s" }, { label: "Session", value: `${messages.length} msgs` }, { label: "Off-topic", value: `${offTopicCount}/3` }].map(s => (
