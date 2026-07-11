@@ -7,6 +7,27 @@ function generateTicketNumber(): string {
   return `TKT-${Math.random().toString(36).slice(2, 6).toUpperCase()}${Date.now().toString(36).slice(-2).toUpperCase()}`;
 }
 
+// Simple in-memory rate limit: 20 messages per 10 minutes per IP.
+// Note: this resets on cold start and doesn't share state across
+// serverless instances -- it's a real deterrent against casual abuse,
+// not a hard guarantee. Good enough for a demo; a real production
+// launch would want Upstash Redis or similar for a durable limit.
+const RATE_LIMIT = 20;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const requestLog = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const timestamps = (requestLog.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (timestamps.length >= RATE_LIMIT) {
+    requestLog.set(ip, timestamps);
+    return true;
+  }
+  timestamps.push(now);
+  requestLog.set(ip, timestamps);
+  return false;
+}
+
 const AGENT_TO_TYPE: Record<AgentName, string> = {
   "Triage Orchestrator": "general",
   "Support Agent": "general",
@@ -21,6 +42,14 @@ const AGENT_TO_TYPE: Record<AgentName, string> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many messages. Please wait a few minutes and try again.", response: "You're sending messages a bit too quickly. Please wait a few minutes before continuing.", agentName: "Support Agent" },
+        { status: 429 }
+      );
+    }
+
     const { message, history, offTopicCount, ticketId } = await req.json();
 
     if (!message || typeof message !== "string") {

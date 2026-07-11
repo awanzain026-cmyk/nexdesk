@@ -222,19 +222,28 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-cyan">
-              <Zap className="h-3 w-3 text-void" />
+        <div className="max-w-5xl mx-auto flex flex-col gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-cyan">
+                <Zap className="h-3 w-3 text-void" />
+              </div>
+              <span className="text-sm font-medium text-text-primary">NexDesk</span>
+              <span className="text-xs text-text-muted">— AI Customer Support Platform</span>
             </div>
-            <span className="text-sm font-medium text-text-primary">NexDesk</span>
-            <span className="text-xs text-text-muted">— AI Customer Support Platform</span>
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-text-muted">
+              <Link href="/dashboard" className="hover:text-text-primary transition-colors">Dashboard</Link>
+              <Link href="/chat" className="hover:text-text-primary transition-colors">Live Chat</Link>
+              <Link href="/analytics" className="hover:text-text-primary transition-colors">Analytics</Link>
+              <a href="mailto:zainmalik.622aa@gmail.com" className="hover:text-text-primary transition-colors">Contact</a>
+            </div>
           </div>
-          <div className="flex items-center gap-6 text-xs text-text-muted">
-            <Link href="/dashboard" className="hover:text-text-primary transition-colors">Dashboard</Link>
-            <Link href="/chat" className="hover:text-text-primary transition-colors">Live Chat</Link>
-            <Link href="/analytics" className="hover:text-text-primary transition-colors">Analytics</Link>
-            <span>© 2026 NexDesk</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/50 text-[11px] text-text-muted">
+            <span>© 2026 NexDesk. Demo project — no real payments processed.</span>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="hover:text-text-primary transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-text-primary transition-colors">Terms of Service</Link>
+            </div>
           </div>
         </div>
       </footer>
