@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, history, offTopicCount, ticketId } = await req.json();
+    const { message, history, offTopicCount, ticketId, customerName, customerEmail } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
             priority: "medium",
             agent_handled: result.agentName,
             off_topic_count: result.offTopicCount,
+            customer_name: customerName ?? null,
+            customer_email: customerEmail ?? null,
           })
           .select("id")
           .single();

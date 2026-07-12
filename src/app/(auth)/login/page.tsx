@@ -11,8 +11,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  const [email, setEmail] = useState("admin@techvault.com");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Try admin@techvault.com / demo123");
+        setError("Invalid email or password.");
         setLoading(false);
         return;
       }
@@ -124,13 +124,12 @@ export default function LoginPage() {
           </button>
 
           <p className="text-xs text-text-muted text-center">
-            Demo credentials pre-filled. <br />
-            <span className="text-text-disabled">Just click Sign In.</span>
+            Admin access only. Contact your administrator for credentials.
           </p>
         </form>
 
         <p className="text-xs text-text-muted text-center mt-6">
-          This is a demo project. No real data is stored.
+          <a href="/support" className="text-cyan hover:underline">Need customer support? Click here →</a>
         </p>
       </motion.div>
     </div>

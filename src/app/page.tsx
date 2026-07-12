@@ -52,7 +52,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-sm text-text-muted hover:text-text-primary transition-colors px-2">Dashboard</Link>
-            <Link href="/chat" className="btn-primary text-sm py-2 px-4">
+            <Link href="/support" className="btn-primary text-sm py-2 px-4">
               Try Live Chat <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -83,7 +83,7 @@ export default function LandingPage() {
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-3">
-              <Link href="/chat">
+              <Link href="/support">
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} className="btn-primary text-base px-7 py-3.5">
                   <MessageSquare className="h-5 w-5" /> Try Live Demo
                 </motion.button>
@@ -205,7 +205,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-[family-name:var(--font-display)] font-normal text-text-primary mb-4">See it handle a real ticket</h2>
             <p className="text-text-secondary mb-8">Live demo, real AI agents, the actual TechVault product catalog — not a script.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/chat">
+              <Link href="/support">
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} className="btn-primary px-8 py-3.5 text-base">
                   <MessageSquare className="h-5 w-5" /> Start Free Demo
                 </motion.button>
@@ -233,7 +233,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-text-muted">
               <Link href="/dashboard" className="hover:text-text-primary transition-colors">Dashboard</Link>
-              <Link href="/chat" className="hover:text-text-primary transition-colors">Live Chat</Link>
+              <Link href="/support" className="hover:text-text-primary transition-colors">Live Chat</Link>
               <Link href="/analytics" className="hover:text-text-primary transition-colors">Analytics</Link>
               <a href="mailto:zainmalik.622aa@gmail.com" className="hover:text-text-primary transition-colors">Contact</a>
             </div>
