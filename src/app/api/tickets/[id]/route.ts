@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export async function GET(
   _req: NextRequest,
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const ticketRes = await supabase.from("tickets").select("*").eq("id", id).single();
     if (ticketRes.error || !ticketRes.data) {
@@ -37,7 +37,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const updates = await req.json();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { error } = await supabase
       .from("tickets")
