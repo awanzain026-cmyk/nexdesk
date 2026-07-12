@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processMessage } from "@/lib/agents";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { AgentName } from "@/types";
 
 function generateTicketNumber(): string {
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     // customer conversation on a database hiccup.
     let realTicketId = ticketId;
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
 
       if (!realTicketId) {
         const ticketNumber = generateTicketNumber();
