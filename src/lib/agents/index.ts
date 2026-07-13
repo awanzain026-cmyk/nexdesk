@@ -169,7 +169,8 @@ function isOffTopic(message: string): boolean {
 export async function processMessage(
   userMessage: string,
   history: ChatMessage[],
-  offTopicCount: number
+  offTopicCount: number,
+  currentAgent?: AgentName
 ): Promise<{ response: string; agentName: AgentName; offTopicCount: number }> {
 
   // Off-topic guard
@@ -189,10 +190,26 @@ export async function processMessage(
     };
   }
 
-  // Route to appropriate agent
-  const { agent } = history.length === 0
-    ? { agent: "Triage Orchestrator" as AgentName }
-    : detectIssueType(userMessage);
+  // Determine agent:
+  // 1. First message → Triage Orchestrator
+  // 2. New topic keyword detected → switch to correct specialist
+  // 3. Follow-up message (no strong keyword) → STAY with current agent for context
+  let agent: AgentName;
+
+  if (history.length === 0) {
+    agent = "Triage Orchestrator";
+  } else {
+    const detected = detectIssueType(userMessage);
+    // Only switch agent if a strong keyword was detected (confidence >= 0.85)
+    // Otherwise stay with current agent to maintain conversation context
+    if (detected.confidence >= 0.9) {
+      agent = detected.agent;
+    } else if (currentAgent && currentAgent !== "Triage Orchestrator") {
+      agent = currentAgent;
+    } else {
+      agent = detected.agent;
+    }
+  }
 
   const agentPrompt = AGENT_PROMPTS[agent] ?? AGENT_PROMPTS["Support Agent"];
 
