@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -44,8 +43,7 @@ interface SidebarProps { user?: { full_name: string | null; email: string } | nu
 export default function Sidebar({ user: propUser }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { data: session } = useSession();
-  const user = propUser || (session?.user ? { full_name: session.user.name ?? null, email: session.user.email ?? "" } : null);
+  const user = propUser ?? null;
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
@@ -104,7 +102,7 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
       {user && (
         <div className="px-3 pb-4 border-t border-border pt-3">
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => { window.location.href = "/login"; }}
             className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-raised transition-colors cursor-pointer group text-left"
           >
             <Avatar name={user.full_name || user.email} size="sm" />
