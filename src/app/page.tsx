@@ -85,7 +85,7 @@ export default function LandingPage() {
               className="flex flex-col sm:flex-row gap-3">
               <Link href="/support">
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} className="btn-primary text-base px-7 py-3.5">
-                  <MessageSquare className="h-5 w-5" /> Try Live Demo
+                  <MessageSquare className="h-5 w-5" /> Chat with Support
                 </motion.button>
               </Link>
               <Link href="/dashboard">
@@ -207,7 +207,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/support">
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} className="btn-primary px-8 py-3.5 text-base">
-                  <MessageSquare className="h-5 w-5" /> Start Free Demo
+                  <MessageSquare className="h-5 w-5" /> Chat with Support Agent
                 </motion.button>
               </Link>
               <Link href="/dashboard">
