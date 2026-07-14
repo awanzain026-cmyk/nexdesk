@@ -50,13 +50,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, history, offTopicCount, ticketId, customerName, customerEmail } = await req.json();
+    const { message, history, offTopicCount, ticketId, customerName, customerEmail, currentAgent } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
     }
 
-    const result = await processMessage(message, history ?? [], offTopicCount ?? 0);
+    const result = await processMessage(message, history ?? [], offTopicCount ?? 0, currentAgent);
 
     // Persist to Supabase -- if this fails, the chat still works for the
     // user, it just won't show up on the dashboard. Never block a real

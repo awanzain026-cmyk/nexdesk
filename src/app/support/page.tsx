@@ -1,7 +1,7 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Zap, Sparkles, ArrowLeft, MessageSquare } from "lucide-react";
+import { Send, Zap, Sparkles, ArrowLeft, MessageSquare, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import type { ChatMessage, AgentName } from "@/types";
@@ -23,10 +23,18 @@ const QUICK_PROMPTS = [
   "Is the iPhone 15 Pro Max in stock?",
   "What is your return policy?",
   "Where is my order?",
-  "Compare iPhone 15 vs Samsung Galaxy S24",
+  "Compare iPhone 15 vs Samsung Galaxy S24 Ultra",
 ];
 
 interface CustomerInfo { name: string; email: string; }
+
+interface PastTicket {
+  id: string;
+  ticket_number: string;
+  subject: string;
+  status: string;
+  created_at: string;
+}
 
 export default function SupportPage() {
   const [step, setStep] = useState<"intro" | "chat">("intro");
@@ -35,6 +43,8 @@ export default function SupportPage() {
   const [emailInput, setEmailInput] = useState("");
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [pastTickets, setPastTickets] = useState<PastTicket[]>([]);
+  const [checkingHistory, setCheckingHistory] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -49,12 +59,24 @@ export default function SupportPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
+  // Check for returning customer history when email is typed
+  const checkHistory = useCallback(async (email: string) => {
+    if (!email.includes("@")) return;
+    setCheckingHistory(true);
+    try {
+      const res = await fetch(`/api/customer-history?email=${encodeURIComponent(email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPastTickets(data.tickets ?? []);
+      }
+    } catch {}
+    setCheckingHistory(false);
+  }, []);
+
   const startChat = () => {
     let valid = true;
-    if (!nameInput.trim()) { setNameError("Please enter your name"); valid = false; }
-    else setNameError("");
-    if (!emailInput.trim() || !emailInput.includes("@")) { setEmailError("Please enter a valid email"); valid = false; }
-    else setEmailError("");
+    if (!nameInput.trim()) { setNameError("Please enter your name"); valid = false; } else setNameError("");
+    if (!emailInput.trim() || !emailInput.includes("@")) { setEmailError("Please enter a valid email"); valid = false; } else setEmailError("");
     if (!valid) return;
     setCustomerInfo({ name: nameInput.trim(), email: emailInput.trim() });
     setStep("chat");
@@ -84,6 +106,7 @@ export default function SupportPage() {
           history: messages,
           offTopicCount,
           ticketId,
+          currentAgent,
           customerName: customerInfo.name,
           customerEmail: customerInfo.email,
         }),
@@ -104,8 +127,8 @@ export default function SupportPage() {
       setMessages(prev => [...prev, {
         id: Math.random().toString(36).slice(2),
         role: "assistant",
-        content: "I'm having trouble connecting. Please try again in a moment.",
-        agentName: "Support Agent",
+        content: "I am having trouble connecting right now. Please try again in a moment.",
+        agentName: "Support Agent" as AgentName,
         timestamp: new Date().toISOString(),
       }]);
     } finally {
@@ -123,118 +146,139 @@ export default function SupportPage() {
   // ── INTRO STEP ──────────────────────────────────────────────────────────────
   if (step === "intro") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex flex-col">
         {/* Nav */}
-        <div className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50 px-6 h-14 flex items-center justify-between">
+        <div className="flex-shrink-0 glass border-b border-border/50 px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan to-violet">
               <Zap className="h-3.5 w-3.5 text-void" />
             </div>
             <span className="font-bold text-text-primary text-sm">TechVault Support</span>
           </Link>
-          <Link href="/" className="btn-ghost text-xs gap-1.5">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to home
+          <Link href="/" className="btn-ghost text-xs gap-1.5 flex items-center">
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
           </Link>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md mt-14">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan/20 to-violet/20 border border-cyan/20 mb-4">
-              <MessageSquare className="h-7 w-7 text-cyan" />
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan/20 to-violet/20 border border-cyan/20 mb-4">
+                <MessageSquare className="h-7 w-7 text-cyan" />
+              </div>
+              <h1 className="text-2xl font-bold text-text-primary">How can we help?</h1>
+              <p className="text-sm text-text-muted mt-2">Our AI support team responds instantly — 24/7.</p>
             </div>
-            <h1 className="text-2xl font-bold text-text-primary">How can we help?</h1>
-            <p className="text-sm text-text-muted mt-2">Our AI support team is ready. Tell us who you are to get started.</p>
-          </div>
 
-          {/* Form */}
-          <div className="card-static rounded-2xl p-6 space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1.5">Your Name <span className="text-rose">*</span></label>
-              <input
-                type="text" value={nameInput}
-                onChange={e => { setNameInput(e.target.value); setNameError(""); }}
-                onKeyDown={e => { if (e.key === "Enter") startChat(); }}
-                placeholder="Enter your full name"
-                className={cn("input-field", nameError && "border-rose/50")}
-                autoFocus
-              />
-              {nameError && <p className="text-xs text-rose mt-1">{nameError}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1.5">Email Address <span className="text-rose">*</span></label>
-              <input
-                type="email" value={emailInput}
-                onChange={e => { setEmailInput(e.target.value); setEmailError(""); }}
-                onKeyDown={e => { if (e.key === "Enter") startChat(); }}
-                placeholder="your@email.com"
-                className={cn("input-field", emailError && "border-rose/50")}
-              />
-              {emailError && <p className="text-xs text-rose mt-1">{emailError}</p>}
-            </div>
-            <button onClick={startChat} className="btn-primary w-full justify-center mt-2">
-              Start Chat <Sparkles className="h-4 w-4" />
-            </button>
-          </div>
+            {/* Form */}
+            <div className="card-static rounded-2xl p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1.5">Your Name <span className="text-rose">*</span></label>
+                <input type="text" value={nameInput}
+                  onChange={e => { setNameInput(e.target.value); setNameError(""); }}
+                  onKeyDown={e => { if (e.key === "Enter") startChat(); }}
+                  placeholder="Enter your full name"
+                  className={cn("input-field", nameError && "border-rose/50")} autoFocus />
+                {nameError && <p className="text-xs text-rose mt-1">{nameError}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1.5">Email Address <span className="text-rose">*</span></label>
+                <input type="email" value={emailInput}
+                  onChange={e => { setEmailInput(e.target.value); setEmailError(""); checkHistory(e.target.value); }}
+                  onKeyDown={e => { if (e.key === "Enter") startChat(); }}
+                  placeholder="your@email.com"
+                  className={cn("input-field", emailError && "border-rose/50")} />
+                {emailError && <p className="text-xs text-rose mt-1">{emailError}</p>}
 
-          {/* Agent badges */}
-          <div className="mt-6 text-center">
-            <p className="text-[11px] text-text-muted mb-3">8 specialized agents ready to help</p>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {["Returns", "Replacement", "Warranty", "Tracking", "Product Info", "Policy", "Inventory", "Escalation"].map(a => (
-                <span key={a} className="badge badge-gray text-[10px]">{a}</span>
-              ))}
+                {/* Returning customer history */}
+                {checkingHistory && (
+                  <p className="text-[11px] text-text-muted mt-2">Checking your history...</p>
+                )}
+                {!checkingHistory && pastTickets.length > 0 && (
+                  <div className="mt-3 p-3 rounded-lg bg-cyan/5 border border-cyan/15">
+                    <p className="text-[11px] font-semibold text-cyan mb-2 flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" /> Welcome back! Your recent tickets:
+                    </p>
+                    <div className="space-y-1.5">
+                      {pastTickets.slice(0, 3).map(t => (
+                        <div key={t.id} className="flex items-center justify-between text-[11px]">
+                          <span className="text-text-muted font-mono">{t.ticket_number}</span>
+                          <span className="text-text-secondary truncate mx-2 flex-1">{t.subject}</span>
+                          <span className={cn("badge text-[9px] flex-shrink-0",
+                            t.status === "resolved" ? "badge-green" : t.status === "open" ? "badge-cyan" : "badge-amber")}>
+                            {t.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button onClick={startChat} className="btn-primary w-full justify-center mt-2">
+                Chat with Support Agent <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Agent badges */}
+            <div className="mt-5 text-center">
+              <p className="text-[11px] text-text-muted mb-2">8 specialized AI agents available</p>
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {["Returns", "Replacement", "Warranty", "Tracking", "Product Info", "Policy", "Inventory", "Escalation"].map(a => (
+                  <span key={a} className="badge badge-gray text-[10px]">{a}</span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
   // ── CHAT STEP ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Nav */}
       <div className="flex-shrink-0 glass border-b border-border/50 px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan to-violet">
             <Zap className="h-3.5 w-3.5 text-void" />
           </div>
-          <span className="font-bold text-text-primary text-sm">TechVault Support</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5">
-            <span className="status-dot online" />
-            <span className="text-[11px] text-emerald font-medium">
-              {currentAgent ?? "8 Agents Ready"}
+          <div>
+            <span className="font-bold text-text-primary text-sm block">NexDesk AI</span>
+            <span className={cn("text-[10px] font-medium", currentAgent ? AGENT_COLORS[currentAgent]?.text ?? "text-cyan" : "text-emerald")}>
+              {currentAgent ?? "Support Agent"} <span className="text-text-muted">• Online</span>
             </span>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
           {ticketId && (
             <span className="badge badge-cyan text-[10px] hidden sm:inline-flex">
               Ticket #{ticketId.slice(0, 8)}
             </span>
           )}
-          <div className="text-right hidden sm:block">
-            <p className="text-[11px] font-medium text-text-primary">{customerInfo.name}</p>
-            <p className="text-[10px] text-text-muted">{customerInfo.email}</p>
-          </div>
+          <button onClick={() => { setMessages([]); setCurrentAgent(null); setTicketId(null); setOffTopicCount(0); }}
+            className="btn-ghost text-xs gap-1.5 flex items-center">
+            New Chat
+          </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-3xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 max-w-3xl w-full mx-auto">
         <AnimatePresence initial={false}>
           {messages.length === 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="p-4 rounded-2xl bg-cyan/10 border border-cyan/20 mb-5">
+              className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="p-4 rounded-2xl bg-cyan/10 border border-cyan/20 mb-4">
                 <Sparkles className="h-8 w-8 text-cyan" />
               </div>
-              <h2 className="text-lg font-bold text-text-primary mb-1">Hi {customerInfo.name}! 👋</h2>
-              <p className="text-sm text-text-muted max-w-sm mb-8">
-                How can we help you today? Choose a common issue or type your question below.
+              <h2 className="text-lg font-bold text-text-primary mb-1">Hi {customerInfo.name}!</h2>
+              <p className="text-sm text-text-muted max-w-xs mb-6">
+                What can we help you with today? Our agents handle returns, replacements, product questions and more.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
                 {QUICK_PROMPTS.map((p) => (
                   <button key={p} onClick={() => sendMessage(p)}
                     className="text-left text-xs text-text-secondary bg-raised border border-border rounded-lg px-3 py-2.5 hover:border-cyan/30 hover:text-text-primary hover:bg-cyan/5 transition-all cursor-pointer">
@@ -256,9 +300,7 @@ export default function SupportPage() {
                     {customerInfo.name.slice(0, 2).toUpperCase()}
                   </div>
                 ) : (
-                  <div className={cn("flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold", ac.bg, ac.border, ac.text)}>
-                    AI
-                  </div>
+                  <div className={cn("flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold", ac.bg, ac.border, ac.text)}>AI</div>
                 )}
                 <div className={cn("max-w-[78%] flex flex-col space-y-1", isUser ? "items-end" : "items-start")}>
                   {!isUser && msg.agentName && (
@@ -275,12 +317,10 @@ export default function SupportPage() {
 
           {isLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-              <div className={cn("flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold agent-active", agentColor.bg, agentColor.border, agentColor.text)}>
-                AI
-              </div>
+              <div className={cn("flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold", agentColor.bg, agentColor.border, agentColor.text)}>AI</div>
               <div className="chat-bubble-agent flex items-center gap-2">
                 <div className="flex gap-1">
-                  {[0, 1, 2].map(i => (
+                  {[0,1,2].map(i => (
                     <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-cyan"
                       animate={{ opacity: [0.3, 1, 0.3] }}
                       transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
@@ -295,28 +335,24 @@ export default function SupportPage() {
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 glass border-t border-border/50 px-4 py-4">
+      <div className="flex-shrink-0 glass border-t border-border/50 px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-end gap-3">
-          <textarea
-            ref={inputRef}
-            value={input}
+          <textarea ref={inputRef} value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message... (Enter to send)"
             rows={1}
-            className="input-field flex-1 resize-none max-h-32 overflow-y-auto py-3"
-            style={{ minHeight: "44px" }}
+            className="input-field flex-1 resize-none max-h-28 overflow-y-auto py-2.5"
+            style={{ minHeight: "42px" }}
           />
-          <button
-            onClick={() => sendMessage()}
+          <button onClick={() => sendMessage()}
             disabled={!input.trim() || isLoading}
-            className="btn-primary px-4 py-3 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-          >
-            <Send className="h-4 w-4" />
+            className="btn-primary px-4 py-2.5 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 flex items-center gap-2">
+            <Send className="h-4 w-4" /> Send
           </button>
         </div>
         <p className="text-[10px] text-text-disabled text-center mt-2">
-          Powered by TechVault AI · Your conversation is saved for follow-up
+          Powered by 8 AI agents · TechVault Support
         </p>
       </div>
     </div>

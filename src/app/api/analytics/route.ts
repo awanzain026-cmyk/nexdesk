@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     const [totalRes, resolvedRes, openRes, typeRes] = await Promise.all([
       supabase.from("tickets").select("*", { count: "exact", head: true }),

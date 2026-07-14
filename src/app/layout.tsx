@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
-import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
 
 const siteUrl = "https://nexdesk-cyan.vercel.app";
@@ -38,9 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="ambient-bg min-h-full antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        {children}
         <Analytics />
       </body>
     </html>
