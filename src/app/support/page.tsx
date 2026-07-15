@@ -79,8 +79,9 @@ export default function SupportPage() {
     if (!emailInput.trim() || !emailInput.includes("@")) { setEmailError("Please enter a valid email"); valid = false; } else setEmailError("");
     if (!valid) return;
     setCustomerInfo({ name: nameInput.trim(), email: emailInput.trim() });
+    window.scrollTo(0, 0);
     setStep("chat");
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus(), 200);
   };
 
   const sendMessage = async (text?: string) => {
@@ -146,7 +147,7 @@ export default function SupportPage() {
   // ── INTRO STEP ──────────────────────────────────────────────────────────────
   if (step === "intro") {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col" style={{ minHeight: "100dvh" }}>
         {/* Nav */}
         <div className="flex-shrink-0 glass border-b border-border/50 px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -238,7 +239,7 @@ export default function SupportPage() {
 
   // ── CHAT STEP ──────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh" }}>
       {/* Nav */}
       <div className="flex-shrink-0 glass border-b border-border/50 px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
