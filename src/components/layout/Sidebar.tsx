@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Ticket, MessageSquare, Package,
   BarChart3, Settings, Zap, ChevronRight, LogOut, X, Menu,
-  GitMerge, Headphones, Package as PackageIcon, BookOpen,
-  FileText, Undo2, RefreshCw, AlertTriangle,
+  GitMerge, Headphones, BookOpen, FileText, Undo2, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "@/components/ui";
@@ -15,7 +15,7 @@ import { Avatar } from "@/components/ui";
 const AGENT_ICONS = [
   { name: "Triage", icon: GitMerge },
   { name: "Support", icon: Headphones },
-  { name: "Inventory", icon: PackageIcon },
+  { name: "Inventory", icon: Package },
   { name: "Catalog", icon: BookOpen },
   { name: "Policy", icon: FileText },
   { name: "Returns", icon: Undo2 },
@@ -102,7 +102,7 @@ export default function Sidebar({ user: propUser }: SidebarProps) {
       {user && (
         <div className="px-3 pb-4 border-t border-border pt-3">
           <button
-            onClick={() => { window.location.href = "/login"; }}
+            onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-raised transition-colors cursor-pointer group text-left"
           >
             <Avatar name={user.full_name || user.email} size="sm" />
