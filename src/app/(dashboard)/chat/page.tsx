@@ -63,6 +63,7 @@ export default function ChatPage() {
           history: messages,
           offTopicCount,
           ticketId,
+          currentAgent,
         }),
       });
       const data = await res.json();
