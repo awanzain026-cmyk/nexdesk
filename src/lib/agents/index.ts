@@ -79,24 +79,35 @@ TOPICS: return policy, warranty coverage, shipping timelines, refund process
 
 You are the Inventory specialist. Answer stock and availability questions.
 
-CURRENT STOCK: ${PRODUCTS.map(p => `${p.name}: ${p.stock} units`).join(", ")}
+STOCK SUMMARY (key products):
+- iPhones: 15 Pro Max(24), OnePlus 12(14), Pixel 8(31), S24 Ultra(18)
+- Laptops: MacBook Air M3(11), Dell XPS(7), ThinkPad X1(9), ASUS ZenBook(13)
+- Headphones: Sony XM5(42), AirPods Pro(67), Bose QC45(28), Sennheiser(19)
+- Watches: Apple Watch S9(33), Galaxy Watch 6(21), Garmin Fenix(8)
+- Accessories: MagSafe(120), Anker Charger(88), Spigen Case(200)
 
-- Tell customer exact stock number
-- If low stock (under 10): mention urgency
-- If out of stock: suggest similar alternatives from catalog
-- Restock estimate: "typically 2-3 weeks" if unsure`,
+- Tell exact stock numbers. If under 10 units: mention limited availability.
+- If out of stock: suggest similar alternatives.
+- Restock estimate: "typically 2-3 weeks".`,
 
   "Catalog Agent": `${STORE_CONTEXT}
 
-You are the Product specialist. Answer all product questions with expertise.
+You are the Product specialist. Answer product questions with expertise.
 
-FULL CATALOG:
-${PRODUCTS.map(p => `${p.name}: ${JSON.stringify(p.specs)}, $${p.price}, ${p.warranty_months}mo warranty`).join("\n")}
+KEY PRODUCTS & SPECS:
+- iPhone 15 Pro Max: A17 Pro, 6.7" OLED, 48MP, $1199, 12mo warranty
+- Samsung S24 Ultra: Snapdragon 8 Gen3, 200MP, S Pen, $1299, 12mo
+- Google Pixel 8 Pro: Tensor G3, 50MP, 7yr updates, $999, 36mo
+- MacBook Air M3 15": Apple M3, 16GB, $1299, 12mo warranty
+- Dell XPS 15: i9, RTX 4070, 32GB, 3.5K OLED, $1799, 12mo
+- Sony WH-1000XM5: Best ANC, 30hr battery, $349, 12mo
+- AirPods Pro 2: Apple H2, Adaptive ANC, $249, 12mo
+- Apple Watch S9: S9 chip, Always-On, $429, 12mo
+- For full specs of any product, provide from your knowledge of these product lines.
 
-- Give detailed specs when asked
-- Compare products objectively with pros/cons
-- Recommend based on customer needs
-- Mention price, warranty, key differentiators`,
+- Compare objectively with pros/cons
+- Recommend based on budget and needs
+- Always mention price and warranty`,
 
   "Escalation Agent": `${STORE_CONTEXT}
 
@@ -131,19 +142,32 @@ async function callSodeom(systemPrompt: string, messages: ChatMessage[]): Promis
     },
     body: JSON.stringify({
       model: "gpt-4o",
-      max_tokens: 450,
-      temperature: 0.5, // Lower = more consistent, follows instructions better
+      max_tokens: 400,
+      temperature: 0.5,
       messages: [
         { role: "system", content: systemPrompt },
-        ...messages.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.content })),
+        // Only send last 6 messages to avoid token limits
+        ...messages.slice(-6).map(m => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: m.content,
+        })),
       ],
     }),
   });
 
-  if (!res.ok) throw new Error(`Sodeom error: ${res.status}`);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    console.error(`[sodeom] HTTP ${res.status}:`, errText.slice(0, 200));
+    throw new Error(`Sodeom error: ${res.status}`);
+  }
+
   const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim()
-    ?? "I'm having trouble right now. Please try again or email support@techvault.com";
+  const content = data.choices?.[0]?.message?.content?.trim();
+  if (!content) {
+    console.error("[sodeom] empty response:", JSON.stringify(data).slice(0, 200));
+    throw new Error("Empty response from Sodeom");
+  }
+  return content;
 }
 
 // ─── Intent Detection ──────────────────────────────────────────────────────────
